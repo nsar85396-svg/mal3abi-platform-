@@ -16,7 +16,8 @@ const slots = Array.from({length:11}, (_,i) => String((15+i)%24).padStart(2,'0')
 const keyDate = (d:Date) => new Intl.DateTimeFormat('en-CA',{timeZone:'Africa/Tripoli',year:'numeric',month:'2-digit',day:'2-digit'}).format(d)
 
 export default function App() {
-  const [venues,setVenues] = useState<Venue[]>(demoVenues)\n  const [kind,setKind] = useState('الكل')
+  const [venues,setVenues] = useState<Venue[]>(demoVenues)
+  const [kind,setKind] = useState('الكل')
   const [query,setQuery] = useState('')
   const [day,setDay] = useState(keyDate(new Date()))
   const [time,setTime] = useState('18:00')
