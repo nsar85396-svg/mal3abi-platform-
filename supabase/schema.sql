@@ -12,6 +12,7 @@ create table if not exists public.venues (
   is_active boolean not null default true,
   created_at timestamptz not null default now()
 );
+create unique index if not exists venues_name_unique on public.venues(name);
 
 create table if not exists public.profiles (
   id uuid primary key references auth.users(id) on delete cascade,
@@ -117,10 +118,36 @@ $$;
 revoke all on function public.create_public_booking(uuid,text,text,timestamptz,timestamptz) from public;
 grant execute on function public.create_public_booking(uuid,text,text,timestamptz,timestamptz) to anon,authenticated;
 
+-- Public availability lookup returns only free hourly starts, never customer data.
+create or replace function public.get_public_available_slots(
+  p_venue_id uuid, p_local_day date
+) returns table(slot_start timestamptz, slot_end timestamptz)
+language sql stable security definer set search_path=public,pg_temp as $
+  with candidates as (
+    select (p_local_day::timestamp + make_interval(hours => h)) at time zone 'Africa/Tripoli' as starts_at
+    from generate_series(15,25) as h
+  )
+  select c.starts_at, c.starts_at + interval '1 hour'
+  from candidates c
+  where c.starts_at > now()
+    and exists(select 1 from public.venues v where v.id=p_venue_id and v.is_active=true)
+    and not exists (
+      select 1 from public.bookings b
+      where b.venue_id=p_venue_id
+        and b.status <> 'cancelled'
+        and tstzrange(b.slot_start,b.slot_end,'[)') &&
+            tstzrange(c.starts_at,c.starts_at+interval '1 hour','[)')
+    )
+  order by c.starts_at;
+$;
+
+revoke all on function public.get_public_available_slots(uuid,date) from public;
+grant execute on function public.get_public_available_slots(uuid,date) to anon,authenticated;
+
 insert into public.venues(name,venue_type,area,hourly_price)
 select 'ملعب ملعبي '||lpad(n::text,2,'0'),
        case when n<=10 then 'خماسي' else 'سداسي' end,
        'يُحدّد لاحقًا',
        case when n<=10 then 80 else 100 end
 from generate_series(1,20) n
-on conflict do nothing;
+on conflict (name) do nothing;
