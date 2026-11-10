@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { createClient } from '@supabase/supabase-js'
 import { ArrowLeft, CalendarDays, Check, Clock3, MapPin, Search, ShieldCheck, Trophy, Users, X } from 'lucide-react'
 
@@ -6,7 +6,7 @@ const url = import.meta.env.VITE_SUPABASE_URL
 const key = import.meta.env.VITE_SUPABASE_ANON_KEY
 const db = url && key ? createClient(url, key) : null
 type Venue = { id: string; name: string; type: 'خماسي' | 'سداسي'; price: number }
-const venues: Venue[] = Array.from({length:20}, (_,i) => ({
+const demoVenues: Venue[] = Array.from({length:20}, (_,i) => ({
   id: '00000000-0000-4000-8000-' + String(i+1).padStart(12,'0'),
   name: 'ملعب ملعبي ' + String(i+1).padStart(2,'0'),
   type: i < 10 ? 'خماسي' : 'سداسي',
@@ -16,7 +16,7 @@ const slots = Array.from({length:11}, (_,i) => String((15+i)%24).padStart(2,'0')
 const keyDate = (d:Date) => d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0')
 
 export default function App() {
-  const [kind,setKind] = useState('الكل')
+  const [venues,setVenues] = useState<Venue[]>(demoVenues)\n  const [kind,setKind] = useState('الكل')
   const [query,setQuery] = useState('')
   const [day,setDay] = useState(keyDate(new Date()))
   const [time,setTime] = useState('18:00')
@@ -26,6 +26,15 @@ export default function App() {
   const [message,setMessage] = useState('')
   const [loading,setLoading] = useState(false)
   const [receipt,setReceipt] = useState('')
+  useEffect(() => {
+    if (!db) return
+    db.from('venues').select('id,name,venue_type,hourly_price').eq('is_active',true).order('name')
+      .then(({data,error}) => {
+        if (!error && data) setVenues(data.map(row => ({
+          id: row.id, name: row.name, type: row.venue_type, price: Number(row.hourly_price)
+        })))
+      })
+  }, [])
   const days = useMemo(() => Array.from({length:7},(_,i)=>{const d=new Date();d.setDate(d.getDate()+i);return d}),[])
   const list = venues.filter(v => (kind==='الكل'||v.type===kind) && v.name.includes(query.trim()))
 
