@@ -122,7 +122,7 @@ grant execute on function public.create_public_booking(uuid,text,text,timestampt
 create or replace function public.get_public_available_slots(
   p_venue_id uuid, p_local_day date
 ) returns table(slot_start timestamptz, slot_end timestamptz)
-language sql stable security definer set search_path=public,pg_temp as $
+language sql stable security definer set search_path=public,pg_temp as $$
   with candidates as (
     select (p_local_day::timestamp + make_interval(hours => h)) at time zone 'Africa/Tripoli' as starts_at
     from generate_series(15,25) as h
@@ -139,7 +139,7 @@ language sql stable security definer set search_path=public,pg_temp as $
             tstzrange(c.starts_at,c.starts_at+interval '1 hour','[)')
     )
   order by c.starts_at;
-$;
+$$;
 
 revoke all on function public.get_public_available_slots(uuid,date) from public;
 grant execute on function public.get_public_available_slots(uuid,date) to anon,authenticated;
