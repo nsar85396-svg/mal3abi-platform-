@@ -13,7 +13,7 @@ const demoVenues: Venue[] = Array.from({length:20}, (_,i) => ({
   price: i < 10 ? 80 : 100
 }))
 const slots = Array.from({length:11}, (_,i) => String((15+i)%24).padStart(2,'0') + ':00')
-const keyDate = (d:Date) => d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0')
+const keyDate = (d:Date) => new Intl.DateTimeFormat('en-CA',{timeZone:'Africa/Tripoli',year:'numeric',month:'2-digit',day:'2-digit'}).format(d)
 
 export default function App() {
   const [venues,setVenues] = useState<Venue[]>(demoVenues)\n  const [kind,setKind] = useState('الكل')
@@ -35,7 +35,7 @@ export default function App() {
         })))
       })
   }, [])
-  const days = useMemo(() => Array.from({length:7},(_,i)=>{const d=new Date();d.setDate(d.getDate()+i);return d}),[])
+  const days = useMemo(() => { const base=new Date(keyDate(new Date())+'T12:00:00Z'); return Array.from({length:7},(_,i)=>{const d=new Date(base);d.setUTCDate(d.getUTCDate()+i);return d}) },[])
   const list = venues.filter(v => (kind==='الكل'||v.type===kind) && v.name.includes(query.trim()))
 
   async function book() {
@@ -43,7 +43,7 @@ export default function App() {
     if (!db) { setMessage('هذه معاينة فقط. اربط قاعدة بيانات Supabase لتفعيل الحجز الحقيقي.'); return }
     setLoading(true); setMessage('')
     try {
-      const start = new Date(day+'T'+time+':00')
+      const start = new Date(day+'T'+time+':00+02:00')
       const end = new Date(start.getTime()+3600000)
       const {data,error} = await db.rpc('create_public_booking',{
         p_venue_id:venue.id,p_customer_name:name.trim(),p_customer_phone:phone.trim(),
@@ -81,7 +81,7 @@ export default function App() {
       </section>
     </main>
     <footer><a className="brand" href="#"><span className="brand-mark"><Trophy size={18}/></span><span>ملعبي<small>MAL3ABI</small></span></a><p>اللعبة أحلى لما تكون محجوزة.</p><span>© ملعبي 2026</span></footer>
-    {venue&&<div className="modal-backdrop" onClick={()=>setVenue(null)}><section className="booking-modal" onClick={e=>e.stopPropagation()}><button className="close-button" onClick={()=>setVenue(null)}><X/></button><span className="eyebrow">خطوة واحدة تفصلك عن اللعب</span><h2>احجز <em>{venue.name}</em></h2><p className="modal-sub">{venue.type} · {venue.price} د.ل للساعة · الدفع في الملعب</p><label className="field-label"><CalendarDays size={16}/> اختر اليوم</label><div className="date-options">{days.map(d=><button key={keyDate(d)} className={day===keyDate(d)?'active':''} onClick={()=>setDay(keyDate(d))}>{new Intl.DateTimeFormat('ar-LY',{weekday:'short',day:'numeric',month:'short'}).format(d)}</button>)}</div><label className="field-label"><Clock3 size={16}/> وقت البداية</label><div className="time-options">{slots.map(t=><button key={t} className={time===t?'active':''} onClick={()=>setTime(t)}>{t}</button>)}</div><div className="form-grid"><label>الاسم<input value={name} onChange={e=>setName(e.target.value)} placeholder="اسمك الكامل"/></label><label>رقم الهاتف<input value={phone} onChange={e=>setPhone(e.target.value)} inputMode="tel" placeholder="09xxxxxxxx"/></label></div>{message&&<div className="notice">{message}</div>}<button className="confirm-button" disabled={loading} onClick={book}>{loading?'جارٍ تأكيد الحجز...':'تأكيد طلب الحجز'} <Check size={17}/></button><small className="secure-note">لا يتم تحصيل أي مبلغ إلكترونيًا. الدفع في الملعب.</small></section></div>}
+    {venue&&<div className="modal-backdrop" onClick={()=>setVenue(null)}><section className="booking-modal" onClick={e=>e.stopPropagation()}><button className="close-button" onClick={()=>setVenue(null)}><X/></button><span className="eyebrow">خطوة واحدة تفصلك عن اللعب</span><h2>احجز <em>{venue.name}</em></h2><p className="modal-sub">{venue.type} · {venue.price} د.ل للساعة · الدفع في الملعب</p><label className="field-label"><CalendarDays size={16}/> اختر اليوم</label><div className="date-options">{days.map(d=><button key={keyDate(d)} className={day===keyDate(d)?'active':''} onClick={()=>setDay(keyDate(d))}>{new Intl.DateTimeFormat('ar-LY',{timeZone:'Africa/Tripoli',weekday:'short',day:'numeric',month:'short'}).format(d)}</button>)}</div><label className="field-label"><Clock3 size={16}/> وقت البداية</label><div className="time-options">{slots.map(t=><button key={t} className={time===t?'active':''} onClick={()=>setTime(t)}>{t}</button>)}</div><div className="form-grid"><label>الاسم<input value={name} onChange={e=>setName(e.target.value)} placeholder="اسمك الكامل"/></label><label>رقم الهاتف<input value={phone} onChange={e=>setPhone(e.target.value)} inputMode="tel" placeholder="09xxxxxxxx"/></label></div>{message&&<div className="notice">{message}</div>}<button className="confirm-button" disabled={loading} onClick={book}>{loading?'جارٍ تأكيد الحجز...':'تأكيد طلب الحجز'} <Check size={17}/></button><small className="secure-note">لا يتم تحصيل أي مبلغ إلكترونيًا. الدفع في الملعب.</small></section></div>}
     {receipt&&<div className="modal-backdrop" onClick={()=>setReceipt('')}><section className="success-modal" onClick={e=>e.stopPropagation()}><span className="success-icon"><Check/></span><h2>تم استلام طلبك</h2><p>رقم الحجز: <b>{receipt}</b></p><small>احتفظ برقم الحجز. تفعيل إشعار واتساب يأتي في مرحلة لاحقة.</small><button className="confirm-button" onClick={()=>setReceipt('')}>حسنًا</button></section></div>}
   </div>
 }
