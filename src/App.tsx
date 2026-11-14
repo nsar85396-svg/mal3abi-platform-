@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react'
 import { createClient } from '@supabase/supabase-js'
-import { ArrowLeft, CalendarDays, Check, Clock3, MapPin, Search, ShieldCheck, Users, X, Menu, Zap, ChevronDown, Instagram, Phone } from 'lucide-react'
+import { ArrowLeft, CalendarDays, Check, Clock3, MapPin, Search, ShieldCheck, Users, X, Menu, Zap, ChevronDown } from 'lucide-react'
 
 const url = import.meta.env.VITE_SUPABASE_URL
 const key = import.meta.env.VITE_SUPABASE_ANON_KEY
