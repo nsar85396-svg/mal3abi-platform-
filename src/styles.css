@@ -38,3 +38,24 @@ footer{max-width:1240px;margin:auto}
 @media(max-width:800px){.demo-chip{font-size:9px;padding:6px 9px}.hero{min-height:unset}.venue-visual{height:130px}}
 @media(max-width:430px){.demo-chip{display:none}.venue-visual{height:112px}.venue-card{padding:8px}.venue-info h3{font-size:11px}}
 @media(prefers-reduced-motion:reduce){*,*::before,*::after{scroll-behavior:auto!important;transition:none!important;animation:none!important}}
+
+/* Real-photo brand refresh */
+.brand-mark{display:grid;place-items:center;background:linear-gradient(145deg,#72f0aa,#2cbd77);color:#092116}
+.brand-ball{font-size:20px;filter:drop-shadow(0 2px 2px #073b22)}
+.hero-art{height:390px;border-radius:26px;overflow:hidden;box-shadow:0 28px 70px #0008;border:1px solid #b8f5d333}
+.hero-photo{position:absolute;inset:0;background-image:url('https://images.unsplash.com/photo-1574629810360-7efbbe195018?auto=format&fit=crop&w=1400&q=85');background-size:cover;background-position:center}
+.hero-photo-shade{position:absolute;inset:0;background:linear-gradient(90deg,#06150ed9 0%,#07180c80 42%,#06150e18 100%),linear-gradient(0deg,#06150e99,transparent 48%)}
+.hero-tag{z-index:2;bottom:22px;right:22px}
+.hero-photo-caption{position:absolute;z-index:2;right:24px;top:25px;color:#fff;font-size:12px;font-weight:800;display:flex;align-items:center;gap:9px;text-shadow:0 2px 12px #000}
+.photo-live-dot{width:8px;height:8px;border-radius:50%;background:#65f1a2;box-shadow:0 0 12px #65f1a2}
+.venue-visual.venue-photo{background-size:cover;background-position:center;isolation:isolate}
+.venue-photo:before{content:'';position:absolute;inset:0;background:linear-gradient(0deg,#06170dcc 0%,#06170e20 72%);z-index:1}
+.venue-photo-0{background-image:url('https://images.unsplash.com/photo-1522778119026-d647f0596c20?auto=format&fit=crop&w=900&q=80')}
+.venue-photo-1{background-image:url('https://images.unsplash.com/photo-1431324155629-1a6deb1dec8d?auto=format&fit=crop&w=900&q=80')}
+.venue-photo-2{background-image:url('https://images.unsplash.com/photo-1518604666860-9ed391f76460?auto=format&fit=crop&w=900&q=80')}
+.venue-photo-3{background-image:url('https://images.unsplash.com/photo-1574629810360-7efbbe195018?auto=format&fit=crop&w=900&q=80')}
+.venue-visual .mini-pitch{opacity:.25}
+.venue-visual .surface-label{background:#07170dcc;border:1px solid #ffffff25;border-radius:20px;padding:4px 9px}
+.venue-visual .venue-type{backdrop-filter:blur(8px)}
+@media(max-width:800px){.hero-art{height:285px;margin:25px 0 5px}.hero-photo-caption{top:17px;right:17px;font-size:10px}.hero-tag{bottom:15px;right:15px}}
+@media(max-width:430px){.hero-art{height:245px;border-radius:18px}.hero-photo{background-position:58% center}}
