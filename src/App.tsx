@@ -60,13 +60,13 @@ export default function App() {
   return <div className="app-shell">
     <header className="topbar">
       <a className="brand" href="#"><span className="brand-mark"><Trophy size={21}/></span><span>ملعبي<small>MAL3ABI</small></span></a>
-      <nav><a className="nav-active" href="#venues">الملاعب</a><a href="#how">كيف تحجز؟</a></nav>
+      <nav><a className="nav-active" href="#venues">الملاعب</a><a href="#how">كيف تحجز؟</a></nav><span className="demo-chip">نسخة تجريبية</span>
       <a className="admin-link" href="#admin">الإدارة <ArrowLeft size={15}/></a>
     </header>
     <main>
       <section className="hero">
         <div className="hero-copy"><span className="eyebrow"><i className="live-dot"/> ملاعبك، أقرب مما تتوقع</span><h1>اللعب يبدأ<br/><em>من هنا.</em></h1><p>اختر ملعبك وموعدك، واحجز لعبتك القادمة بخطوات بسيطة.</p><a className="hero-cta" href="#venues">استكشف الملاعب <ArrowLeft size={17}/></a></div>
-        <div className="hero-art"><div className="stadium-glow"/><div className="pitch"><i className="pitch-line"/><i className="pitch-circle"/><i className="pitch-box left"/><i className="pitch-box right"/></div><div className="hero-ball">⚽</div><div className="hero-tag"><strong>20</strong><span>ملعبًا للاختيار</span></div></div>
+        <div className="hero-art"><div className="stadium-glow"/><div className="pitch"><i className="pitch-line"/><i className="pitch-circle"/><i className="pitch-box left"/><i className="pitch-box right"/></div><div className="hero-ball">⚽</div><div className="hero-tag"><strong>{venues.length}</strong><span>ملعبًا للاختيار</span></div></div>
         <div className="hero-bottom"><span>01 / احجز بسهولة</span><span>02 / اختر الوقت</span><span>03 / استمتع باللعب</span></div>
       </section>
       <section className="trust-row" id="how">
@@ -75,7 +75,7 @@ export default function App() {
         <div><Users/><span><b>خماسي وسداسي</b><small>اختر نوع لعبتك</small></span></div>
       </section>
       <section className="venues-section" id="venues">
-        <div className="section-heading"><div><span className="eyebrow">اعثر على ملعبك</span><h2>اختر ملعب <em>المباراة</em></h2><p>تصفّح الملاعب وحدد النوع المناسب لفريقك.</p></div><div className="count-pill"><b>20</b> ملعبًا</div></div>
+        <div className="section-heading"><div><span className="eyebrow">اعثر على ملعبك</span><h2>اختر ملعب <em>المباراة</em></h2><p>تصفّح الملاعب وحدد النوع المناسب لفريقك.</p></div><div className="count-pill"><b>{venues.length}</b> ملعبًا</div></div>
         <div className="filters"><div className="search-box"><Search size={18}/><input value={query} onChange={e=>setQuery(e.target.value)} placeholder="ابحث عن ملعب..."/></div><div className="filter-buttons">{['الكل','خماسي','سداسي'].map(x=><button key={x} className={kind===x?'selected':''} onClick={()=>setKind(x)}>{x}</button>)}</div></div>
         <div className="venue-grid">{list.map((v,i)=><article className="venue-card" key={v.id}><div className="venue-visual"><span className="venue-type">{v.type}</span><span className="venue-number">#{String(i+1).padStart(2,'0')}</span><div className="mini-pitch"><i/><b/></div><span className="surface-label">عشب صناعي</span></div><div className="venue-info"><div><h3>{v.name}</h3><p><MapPin size={13}/> الموقع يحدد لاحقًا</p></div><div className="price"><b>{v.price}</b><small>د.ل / ساعة</small></div></div><button className="book-button" onClick={()=>{setVenue(v);setMessage('')}}>احجز هذا الملعب <ArrowLeft size={16}/></button></article>)}</div>
         {list.length===0&&<div className="empty-state">لا توجد ملاعب تطابق بحثك.</div>}
