@@ -64,6 +64,7 @@ export default function App() {
     let active = true
     setSlotsLoading(true)
     setAvailableSlots([])
+    setTime('')
     db.rpc('get_public_available_slots', { p_venue_id: venue.id, p_local_day: day })
       .then(({ data, error }) => {
         if (!active) return
@@ -92,7 +93,7 @@ export default function App() {
   const list = venues.filter(v => (kind === 'الكل' || v.type === kind) && v.name.includes(query.trim()))
 
   async function book() {
-    if (!venue || !time || name.trim().length < 2 || phone.trim().length < 7) { setMessage('اختر موعدًا متاحًا وأدخل الاسم ورقم الهاتف بشكل صحيح.'); return }
+    if (!venue || slotsLoading || !time || (db && !availableSlots.includes(time)) || name.trim().length < 2 || phone.trim().length < 7) { setMessage('اختر موعدًا متاحًا وأدخل الاسم ورقم الهاتف بشكل صحيح.'); return }
     if (!db) { setMessage('هذه معاينة فقط. اربط قاعدة بيانات Supabase لتفعيل الحجز الحقيقي.'); return }
     setLoading(true); setMessage('')
     try {
