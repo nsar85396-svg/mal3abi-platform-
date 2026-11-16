@@ -34,14 +34,54 @@ export default function App() {
   const [loading, setLoading] = useState(false)
   const [receipt, setReceipt] = useState('')
   const [menuOpen, setMenuOpen] = useState(false)
+  const [dataMode, setDataMode] = useState<'loading' | 'database' | 'demo'>(db ? 'loading' : 'demo')
+  const [availableSlots, setAvailableSlots] = useState<string[]>(slots)
+  const [slotsLoading, setSlotsLoading] = useState(false)
 
   useEffect(() => {
-    if (!db) return
+    if (!db) { setDataMode('demo'); return }
+    let active = true
     db.from('venues').select('id,name,venue_type,hourly_price').eq('is_active', true).order('name')
       .then(({ data, error }) => {
-        if (!error && data) setVenues(data.map(row => ({ id: row.id, name: row.name, type: row.venue_type, price: Number(row.hourly_price) })))
+        if (!active) return
+        if (!error && data) {
+          setVenues(data.map(row => ({ id: row.id, name: row.name, type: row.venue_type, price: Number(row.hourly_price) })))
+          setDataMode('database')
+        } else {
+          setDataMode('demo')
+        }
       })
+    return () => { active = false }
   }, [])
+
+  useEffect(() => {
+    if (!venue) return
+    if (!db) {
+      setAvailableSlots(slots)
+      setSlotsLoading(false)
+      return
+    }
+    let active = true
+    setSlotsLoading(true)
+    setAvailableSlots([])
+    db.rpc('get_public_available_slots', { p_venue_id: venue.id, p_local_day: day })
+      .then(({ data, error }) => {
+        if (!active) return
+        if (error) {
+          setMessage('تعذر تحميل المواعيد حاليًا. حاول مرة أخرى بعد قليل.')
+          setAvailableSlots([])
+          return
+        }
+        const formatter = new Intl.DateTimeFormat('en-GB', {
+          timeZone: 'Africa/Tripoli', hour: '2-digit', minute: '2-digit', hourCycle: 'h23'
+        })
+        const times = (data ?? []).map(row => formatter.format(new Date(row.slot_start)))
+        setAvailableSlots(times)
+        setTime(times[0] ?? '')
+      })
+      .finally(() => { if (active) setSlotsLoading(false) })
+    return () => { active = false }
+  }, [venue, day])
 
   const days = useMemo(() => {
     const base = new Date(keyDate(new Date()) + 'T12:00:00Z')
@@ -52,7 +92,7 @@ export default function App() {
   const list = venues.filter(v => (kind === 'الكل' || v.type === kind) && v.name.includes(query.trim()))
 
   async function book() {
-    if (!venue || name.trim().length < 2 || phone.trim().length < 7) { setMessage('أدخل الاسم ورقم الهاتف بشكل صحيح.'); return }
+    if (!venue || !time || name.trim().length < 2 || phone.trim().length < 7) { setMessage('اختر موعدًا متاحًا وأدخل الاسم ورقم الهاتف بشكل صحيح.'); return }
     if (!db) { setMessage('هذه معاينة فقط. اربط قاعدة بيانات Supabase لتفعيل الحجز الحقيقي.'); return }
     setLoading(true); setMessage('')
     try {
@@ -94,19 +134,19 @@ export default function App() {
           <div className="hero-proof"><div className="proof-icon"><ShieldCheck size={18}/></div><span><b>حجز بخطوات واضحة</b><small>تفاصيل السعر والموعد قبل التأكيد</small></span></div>
         </div>
         <div className="hero-side-note"><span>01</span><i/> وقتك للعب، مو للبحث</div>
-        <div className="hero-bottom"><span>كرة قدم · ملاعب خماسية وسداسية</span><span>طرابلس، ليبيا <MapPin size={13}/></span></div>
+        <div className="hero-bottom"><span>كرة قدم · ملاعب خماسية وسداسية</span><span>منصة الملاعب في ليبيا <MapPin size={13}/></span></div>
       </section>
 
       <section className="quick-facts">
         <div><span className="fact-icon"><Zap/></span><span><b>حجز سريع</b><small>اختيار الملعب والموعد بسهولة</small></span></div>
         <div><span className="fact-icon"><Clock3/></span><span><b>مواعيد مسائية</b><small>من 3 عصرًا حتى 2 ليلًا</small></span></div>
         <div><span className="fact-icon"><Users/></span><span><b>اختر فريقك</b><small>ملاعب خماسية وسداسية</small></span></div>
-        <div className="facts-note">منصة تجريبية · البيانات والأسعار المعروضة توضيحية</div>
+        <div className="facts-note">{dataMode === 'database' ? 'متصل ببيانات الملاعب' : 'وضع المعاينة · الأسماء والأسعار والمواعيد توضيحية'}</div>
       </section>
 
       <section className="venues-section section-wrap" id="venues">
         <div className="section-topline"><span className="eyebrow">اختار الملعب، والباقي سهل</span><span className="section-index">01 / الملاعب</span></div>
-        <div className="section-heading"><div><h2>وين <em>مباراتكم؟</em></h2><p>تصفّح الخيارات واختار المساحة المناسبة لفريقك.</p></div><span className="venue-count"><b>{venues.length}</b> ملعب متاح للعرض</span></div>
+        <div className="section-heading"><div><h2>وين <em>مباراتكم؟</em></h2><p>تصفّح الخيارات واختار المساحة المناسبة لفريقك.</p></div><span className="venue-count"><b>{list.length}</b> ملعب ضمن النتائج</span></div>
         <div className="filter-bar">
           <label className="search-box"><Search size={18}/><input value={query} onChange={e => setQuery(e.target.value)} placeholder="ابحث باسم الملعب..." /></label>
           <div className="filter-buttons">{['الكل', 'خماسي', 'سداسي'].map(x => <button key={x} className={kind === x ? 'selected' : ''} onClick={() => setKind(x)}>{x}</button>)}</div>
@@ -161,7 +201,9 @@ export default function App() {
       <span className="eyebrow">خطوة واحدة تفصلك عن اللعب</span><h2>احجز <em>{venue.name}</em></h2><p className="modal-sub">{venue.type} · {venue.price} د.ل للساعة · الدفع في الملعب</p>
       <label className="field-label"><CalendarDays size={16}/> اختر اليوم</label>
       <div className="date-options">{days.map(d => <button key={keyDate(d)} className={day === keyDate(d) ? 'active' : ''} onClick={() => setDay(keyDate(d))}>{new Intl.DateTimeFormat('ar-LY', { timeZone: 'Africa/Tripoli', weekday: 'short', day: 'numeric', month: 'short' }).format(d)}</button>)}</div>
-      <label className="field-label"><Clock3 size={16}/> وقت البداية</label><div className="time-options">{slots.map(t => <button key={t} className={time === t ? 'active' : ''} onClick={() => setTime(t)}>{t}</button>)}</div>
+      <label className="field-label"><Clock3 size={16}/> وقت البداية</label>
+      {slotsLoading ? <div className="slots-status" role="status">جارٍ تحميل المواعيد المتاحة...</div> : availableSlots.length ? <div className="time-options">{availableSlots.map(t => <button key={t} className={time === t ? 'active' : ''} onClick={() => setTime(t)}>{t}</button>)}</div> : <div className="slots-status">لا توجد مواعيد متاحة في هذا اليوم. جرّب يومًا آخر.</div>}
+      {dataMode === 'demo' && <p className="preview-note">هذه أوقات للمعاينة فقط وليست حجوزات فعلية.</p>}
       <div className="form-grid"><label>الاسم<input value={name} onChange={e => setName(e.target.value)} placeholder="اسمك الكامل"/></label><label>رقم الهاتف<input value={phone} onChange={e => setPhone(e.target.value)} inputMode="tel" placeholder="09xxxxxxxx"/></label></div>
       {message && <div className="notice">{message}</div>}
       <button className="confirm-button" disabled={loading} onClick={book}>{loading ? 'جارٍ تأكيد الحجز...' : 'تأكيد طلب الحجز'} <Check size={17}/></button><small className="secure-note">لا يتم تحصيل أي مبلغ إلكترونيًا. الدفع في الملعب.</small>
