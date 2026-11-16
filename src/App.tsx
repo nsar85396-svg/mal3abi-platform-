@@ -94,7 +94,7 @@ export default function App() {
 
   async function book() {
     if (!venue || slotsLoading || !time || (db && !availableSlots.includes(time)) || name.trim().length < 2 || phone.trim().length < 7) { setMessage('اختر موعدًا متاحًا وأدخل الاسم ورقم الهاتف بشكل صحيح.'); return }
-    if (!db) { setMessage('هذه معاينة فقط. اربط قاعدة بيانات Supabase لتفعيل الحجز الحقيقي.'); return }
+    if (dataMode !== 'database') { setMessage('هذه معاينة فقط. تأكد من اتصال قاعدة بيانات Supabase وتحميل بيانات الملاعب لتفعيل الحجز الحقيقي.'); return }
     setLoading(true); setMessage('')
     try {
       const start = new Date(day + 'T' + time + ':00+02:00')
